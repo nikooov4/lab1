@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Users/lemoN/AppData/Local/Programs/Python/Python313/include",       // Укажите путь к заголовкам Python
+                "C:/Users/lemoN/AppData/Local/Programs/Python/Python313/Lib/site-packages/numpy/_core/include"
+            ],
+            "defines": [],
+            "windowsSdkVersion": "10.0.19041.0",
+            "compilerPath": "C:/MinGW/bin/g++.exe",  // Укажите путь к вашему компилятору
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
