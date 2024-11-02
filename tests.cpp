@@ -16,9 +16,9 @@ void testUnqPtrDereferencing() {
 
     UniquePtr<int> unqPtr(new int(42));
     if (*unqPtr == 42) {
-        std::cout << "testUnqPtrDereferencing() - PASSED\n"; //Разыменование UnqPtr работает корректно
+        std::cout << "testUnqPtrDereferencing() - PASSED\n"; // Разыменование UnqPtr работает корректно
     } else {
-        std::cout << "testUnqPtrDereferencing() - ERROR\n"; //Не удалось выполнить разыменование UnqPtr
+        std::cout << "testUnqPtrDereferencing() - ERROR\n"; // Разыменование UnqPtr работает НЕкорректно
     }
 }
 
@@ -28,9 +28,9 @@ void testShrdPtrDereferencing() {
     SharedPtr<int> shrdPtr(unqPtr.release()); // Передача владения сырого указателя
     
     if (*shrdPtr == 42) {
-        std::cout << "testShrdPtrDereferencing() - PASSED\n"; //Разыменование ShrdPtr работает корректно
+        std::cout << "testShrdPtrDereferencing() - PASSED\n"; // Разыменование ShrdPtr работает корректно
     } else {
-        std::cout << "testShrdPtrDereferencing() - ERROR\n"; //Не удалось выполнить разыменование SharedPtr
+        std::cout << "testShrdPtrDereferencing() - ERROR\n"; // Не удалось выполнить разыменование SharedPtr
     }
 }
 
@@ -62,19 +62,19 @@ void testUnqPtrMove() {
     if (!unqPtr1 && unqPtr2) {
         std::cout << "testUnqPtrMove() - PASSED\n"; //Семантика перемещения UnqPtr работает корректно
     } else {
-        std::cout << "testUnqPtrMove() - ERROR\n"; //Семантика перемещения UnqPtr НЕ работает корректно
+        std::cout << "testUnqPtrMove() - ERROR\n"; //Семантика перемещения UnqPtr работает НЕкорректно
     }
 }
 
 void testShrdPtrFromUnqPtr() {
 
     UniquePtr<int> unqPtr(new int(200));
-    SharedPtr<int> shrdPtr(unqPtr.release()); // Передача владения сырого указателя
+    SharedPtr<int> shrdPtr(unqPtr.release()); 
     
     if (*shrdPtr == 200 && !unqPtr) {
         std::cout << "testShrdPtrFromUnqPtr() - PASSED\n"; //ShrdPtr корректно принял права собственности от UnqPtr
     } else {
-        std::cout << "testShrdPtrFromUnqPtr() - ERROR\n"; //ShrdPtr НЕ корректно принял права собственности от UnqPtr
+        std::cout << "testShrdPtrFromUnqPtr() - ERROR\n"; //ShrdPtr НЕкорректно принял права собственности от UnqPtr
     }
 }
 
