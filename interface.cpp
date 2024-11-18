@@ -285,15 +285,15 @@ void displayMenu() {
                 displayPointers();
                 break;
             case 6:
-                int value_for_test;
+                int valueForTest;
                 std::cout << "Выберите Тесты\n";
                 std::cout << "1. Функциональное тестирование\n";
                 std::cout << "2. Нагрузочное тестирование\n";
                 std::cout << "0. Выход\n";
                 std::cout << "Ваш выбор:\n";
-                value_for_test = getInput<int>();
+                valueForTest = getInput<int>();
                 
-                switch(value_for_test) {
+                switch(valueForTest) {
                     case 1: 
                         functionalTest();
                         break;
