@@ -6,4 +6,4 @@ int main() {
     return 0; 
 }
 
-// g++ main.cpp tests.cpp interface.cpp -o Lab1 
+// g++ main.cpp tests.cpp interface.cpp -o Lab1 -std=c++17

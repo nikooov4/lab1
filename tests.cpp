@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <fstream> //Чтение с файла для графика
 #include <iomanip> //Выравнивание вывода
 #include <chrono> //Время
 #include <memory> // Для STL указателей
@@ -11,71 +12,43 @@
 #include "LinkedListSharedPtr.hpp"
 #include "tests.hpp"
 
-// Тестирование разыменования указателей
 void testUnqPtrDereferencing() {
-
     UniquePtr<int> unqPtr(new int(42));
-    if (*unqPtr == 42) {
-        std::cout << "testUnqPtrDereferencing() - PASSED\n"; // Разыменование UnqPtr работает корректно
-    } else {
-        std::cout << "testUnqPtrDereferencing() - ERROR\n"; // Разыменование UnqPtr работает НЕкорректно
-    }
+    assert(*unqPtr == 42);
+    std::cout << "testUnqPtrDereferencing() - PASSED\n"; // Разыменование UnqPtr работает корректно
 }
 
 void testShrdPtrDereferencing() {
-
     UniquePtr<int> unqPtr(new int(42));
-    SharedPtr<int> shrdPtr(unqPtr.release()); // Передача владения сырого указателя
-    
-    if (*shrdPtr == 42) {
-        std::cout << "testShrdPtrDereferencing() - PASSED\n"; // Разыменование ShrdPtr работает корректно
-    } else {
-        std::cout << "testShrdPtrDereferencing() - ERROR\n"; // Не удалось выполнить разыменование SharedPtr
-    }
+    SharedPtr<int> shrdPtr(unqPtr.release());
+    assert(*shrdPtr == 42);
+    std::cout << "testShrdPtrDereferencing() - PASSED\n"; // Разыменование ShrdPtr работает корректно
 }
 
 void testUnqPtrNullptr() {
-    
     UniquePtr<int> unqPtr;
-    if (!unqPtr) {
-        std::cout << "testUnqPtrNullptr() - PASSED\n"; //Проверка UnqPtr на nullptr пройдена
-    } else {
-        std::cout << "testUnqPtrNullptr() - ERROR\n"; //Проверка UnqPtr на nullptr НЕ пройдена
-    }
+    assert(!unqPtr);
+    std::cout << "testUnqPtrNullptr() - PASSED\n"; //Проверка UnqPtr на nullptr пройдена
 }
 
 void testShrdPtrNullptr() {
-    
     SharedPtr<int> shrdPtr;
-    if (!shrdPtr) {
-        std::cout << "testShrdPtrNullptr() - PASSED\n"; //Проверка SharedPtr на nullptr пройдена
-    } else {
-        std::cout << "testShrdPtrNullptr() - ERROR\n"; //Проверка SharedPtr на nullptr НЕ пройдена
-    }
+    assert(!shrdPtr);
+    std::cout << "testShrdPtrNullptr() - PASSED\n"; //Проверка SharedPtr на nullptr пройдена
 }
 
 void testUnqPtrMove() {
-    
     UniquePtr<int> unqPtr1(new int(100));
     UniquePtr<int> unqPtr2 = std::move(unqPtr1);
-    
-    if (!unqPtr1 && unqPtr2) {
-        std::cout << "testUnqPtrMove() - PASSED\n"; //Семантика перемещения UnqPtr работает корректно
-    } else {
-        std::cout << "testUnqPtrMove() - ERROR\n"; //Семантика перемещения UnqPtr работает НЕкорректно
-    }
+    assert(!unqPtr1 && unqPtr2);
+    std::cout << "testUnqPtrMove() - PASSED\n"; //Семантика перемещения UnqPtr работает корректно
 }
 
 void testShrdPtrFromUnqPtr() {
-
     UniquePtr<int> unqPtr(new int(200));
-    SharedPtr<int> shrdPtr(unqPtr.release()); 
-    
-    if (*shrdPtr == 200 && !unqPtr) {
-        std::cout << "testShrdPtrFromUnqPtr() - PASSED\n"; //ShrdPtr корректно принял права собственности от UnqPtr
-    } else {
-        std::cout << "testShrdPtrFromUnqPtr() - ERROR\n"; //ShrdPtr НЕкорректно принял права собственности от UnqPtr
-    }
+    SharedPtr<int> shrdPtr(unqPtr.release());
+    assert(*shrdPtr == 200 && !unqPtr);
+    std::cout << "testShrdPtrFromUnqPtr() - PASSED\n"; //ShrdPtr корректно принял права собственности от UnqPtr
 }
 
 class BaseTest {
@@ -94,69 +67,35 @@ public:
 };
 
 void testPolymorphism() {
-
     UniquePtr<BaseTest> unqPtr(new DerivedTest());
-    //unqPtr->show();  // Должен сказать Derived class
+    assert(dynamic_cast<DerivedTest*>(unqPtr.get()) != nullptr);  // Проверка приведения к DerivedTest
 
     SharedPtr<BaseTest> shrdPtr(unqPtr.release());
-    //shrdPtr->show(); // Должен сказать Derived class
-
+    assert(dynamic_cast<DerivedTest*>(shrdPtr.get()) != nullptr);  // Проверка приведения к DerivedTest
+    
     std::cout << "testPolymorphism() - PASSED\n";
 }
 
-// Тест на единственную наследственность
 void testUniquePtrInheritance() {
-
-    // Создаем UniquePtr для базового и производного классов
     UniquePtr<BaseTest> basePtr(new BaseTest());
     UniquePtr<DerivedTest> derivedPtr(new DerivedTest());
-/*
-    std::cout << "Наследование:";
-    basePtr->show();      // Должно вывести "Base class"
-    std::cout << "Наследование:";
-    derivedPtr->show();   // Должно вывести "Derived class"
-*/
     basePtr = std::move(derivedPtr);
-
-    if (!derivedPtr && basePtr) {
-        std::cout << "testUniquePtrInheritance() - PASSED\n"; // UniquePtr корректно перенес производный файл в базовый
-    } else {
-        std::cout << "testUniquePtrInheritance() - ERROR\n"; // Ошибка в тесте наследования UniquePtr
-    }
-
-    //basePtr->show();  // Должно вывести "Derived class" после присваивания
+    assert(!derivedPtr && basePtr);
+    std::cout << "testUniquePtrInheritance() - PASSED\n"; // UniquePtr корректно перенес производный файл в базовый
 }
 
-// Тест на единственную наследственность
 void testSharedPtrInheritance() {
-
     SharedPtr<BaseTest> basePtr(new BaseTest());
     SharedPtr<DerivedTest> derivedPtr(new DerivedTest());
-/*
-    basePtr->show();      // Должно вывести "Base class"
-    derivedPtr->show();   // Должно вывести "Derived class"
-*/
     basePtr = derivedPtr;
-
-    if (basePtr && derivedPtr) {
-        std::cout << "testSharedPtrInheritance() - PASSED\n"; // UniquePtr корректно перенес производный файл в базовый
-    } else {
-        std::cout << "testSharedPtrInheritance() - ERROR\n"; // Ошибка в тесте наследования UniquePtr
-    }
-
-    //basePtr->show();  // Должно вывести "Derived class" после присваивания
+    assert(basePtr && derivedPtr);
+    std::cout << "testSharedPtrInheritance() - PASSED\n"; // SharedPtr корректно перенес производный файл в базовый
 }
 
-
-// Обработка тестового массива
 void testArrayHandling() {
- 
     UniquePtr<int[]> unqArray(new int[5]{1, 2, 3, 4, 5});
-    if (unqArray) {
-        std::cout << "testArrayHandling() - PASSED\n"; // Обработка массива для UnqPtr работает 
-    } else {
-        std::cout << "testArrayHandling() - ERROR\n"; // Обработка массива для UnqPtr НЕ работает 
-    }
+    assert(unqArray);
+    std::cout << "testArrayHandling() - PASSED\n"; // Обработка массива для UnqPtr работает 
 }
 
 void testSharedPtrFunctionality() {
@@ -164,19 +103,28 @@ void testSharedPtrFunctionality() {
     // Тест 1: Преобразование SharedPtr<int> в SharedPtr<float>
     SharedPtr<int> intPtr = SharedPtr<int>(new int(42));
     SharedPtr<float> floatPtr = intPtr;  // Преобразование int в float
-    assert(floatPtr.use_count() == intPtr.use_count()); 
+    assert(floatPtr.useCount() == intPtr.useCount()); 
     assert(*floatPtr == 42.0f); // Проверка значения после преобразования
+    std::cout << floatPtr.useCount();
+    std::cout << intPtr.useCount();
 
     // Тест 2: Преобразование SharedPtr<DerivedTest> в SharedPtr<BaseTest>
     SharedPtr<DerivedTest> derivedPtr = SharedPtr<DerivedTest>(new DerivedTest());
     SharedPtr<BaseTest> basePtr = derivedPtr; // Преобразование DerivedTest в BaseTest
-    assert(basePtr.use_count() == derivedPtr.use_count());
+    assert(basePtr.useCount() == derivedPtr.useCount());
     //basePtr->show(); // Полиморфное поведение (Derived class)
 
     // Тест 3: Проверка корректности счетчика ссылок после нескольких присвоений
     SharedPtr<float> floatPtrCopy = floatPtr;
-    assert(floatPtr.use_count() == 3);
+    assert(floatPtr.useCount() == 3);
     assert(*floatPtrCopy == 42.0f); // Проверка значения копии
+}
+
+void zz() {
+    // Должно компилироваться
+    UniquePtr<int> uni ( new int(42));
+    *uni = 100500;
+    assert(*uni == 100500);
 }
 
 void functionalTest() {
@@ -193,6 +141,7 @@ void functionalTest() {
     testSharedPtrInheritance();
     testArrayHandling();
     testSharedPtrFunctionality();
+    zz();
 
     std::cout << "Функциональное тестирование окончено\n";
 }
@@ -267,35 +216,61 @@ double loadTestStdSharedPtr(int N) {
     return duration.count();
 }
 
-void runLoadTests() {
-    const int step = 1'000'000;
-    std::cout << "Нагрузочное тестирование запущено\n";
+void runLoadTestsAndPlot() {
+    const int step = 500'000;
+    const int maxElements = 20 * step;
+
+    // Открываем файл для записи результатов
+    std::ofstream file("load_test_results.csv");
+    if (!file.is_open()) {
+        std::cerr << "Ошибка при открытии файла для записи!\n";
+        return;
+    }
+
+    // Заголовок CSV
+    file << "Elements,UniquePtr,StdUniquePtr,SharedPtr,StdSharedPtr\n";
 
     std::cout << std::setw(20) << "Elements"
-              << std::setw(20) << "UniquePtr (s)"
-              << std::setw(20) << "std::unique_ptr (s)"
-              << std::setw(20) << "SharedPtr (s)"
-              << std::setw(20) << "std::shared_ptr (s)"
-              << std::setw(25) << "UniquePtr Speed (%)"
-              << std::setw(25) << "SharedPtr Speed (%)" << std::endl;
+            << std::setw(20) << "UniquePtr (s)"
+            << std::setw(20) << "std::unique_ptr (s)"
+            << std::setw(20) << "SharedPtr (s)"
+            << std::setw(20) << "std::shared_ptr (s)"
+            << std::setw(25) << "UniquePtr Speed (%)"
+            << std::setw(25) << "SharedPtr Speed (%)" << std::endl;
 
-    for (int items = step; items <= 20 * step; items += step) {
+    // Запускаем тесты и записываем результаты в файл
+    for (int items = step; items <= maxElements; items += step) {
         double timeUnique = loadTestUniquePtr(items);
         double timeStdUnique = loadTestStdUniquePtr(items);
         double timeShared = loadTestSharedPtr(items);
         double timeStdShared = loadTestStdSharedPtr(items);
 
+        file << items << ","
+             << std::fixed << std::setprecision(7) << timeUnique << ","
+             << timeStdUnique << ","
+             << timeShared << ","
+             << timeStdShared << "\n";
+
         double uniqueSpeed = (timeStdUnique / timeUnique - 1) * 100;
         double sharedSpeed = (timeStdShared / timeShared - 1) * 100;
 
+        // Выводим на экран
         std::cout << std::setw(20) << items
-                  << std::setw(20) << timeUnique
-                  << std::setw(20) << timeStdUnique
-                  << std::setw(20) << timeShared
-                  << std::setw(20) << timeStdShared
-                  << std::setw(25) << uniqueSpeed
-                  << std::setw(25) << sharedSpeed
-                  << std::endl;
+                << std::setw(20) << timeUnique
+                << std::setw(20) << timeStdUnique
+                << std::setw(20) << timeShared
+                << std::setw(20) << timeStdShared 
+                << std::setw(25) << uniqueSpeed
+                << std::setw(25) << sharedSpeed << std::endl;
     }
-    std::cout << "Нагрузочное тестирование окончено\n";
+    file.close();
+    std::cout << "Нагрузочное тестирование окончено, результаты сохранены в 'load_test_results.csv'\n";
+
+    // Запускаем gnuplot
+    int result = system("gnuplot plot.gp");
+    if (result != 0) {
+        std::cerr << "Ошибка при запуске gnuplot, убедитесь, что он установлен и доступен в PATH\n";
+    } else {
+        std::cout << "График построен и сохранен в 'load_test_plot.png'\n";
+    }
 }

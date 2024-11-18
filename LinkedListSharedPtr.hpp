@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef LINKED_LIST_SHARED_PTR_H
+#define LINKED_LIST_SHARED_PTR_H
+
 #include "SharedPtr.hpp" 
 #include <iostream>
 
@@ -19,7 +22,7 @@ namespace SmartPointer {
     public:
         LinkedListShared() : head(nullptr) {}
 
-        void push_front(T value) {
+        void pushFront(T value) {
             SharedPtr<Node> newNode(new Node(value));
             newNode->next = head;
             head = newNode;
@@ -34,7 +37,7 @@ namespace SmartPointer {
             std::cout << "nullptr" << std::endl;
         }
 
-        void pop_front() {
+        void popFront() {
             if (head) {
                 head = head->next;
             }
@@ -52,3 +55,5 @@ namespace SmartPointer {
         }
     };
 }
+
+#endif

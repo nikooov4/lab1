@@ -9,8 +9,6 @@
 #include "UniquePtr.hpp"
 #include "SharedPtr.hpp"
 
-//#include <matplotlibcpp.h>
-
 //Для хранения указателей с именами
 std::unordered_map<std::string, UniquePtr<int>> uniquePointersInt;
 std::unordered_map<std::string, UniquePtr<std::string>> uniquePointersString;
@@ -18,114 +16,133 @@ std::unordered_map<std::string, UniquePtr<std::string>> uniquePointersString;
 std::unordered_map<std::string, SharedPtr<int>> sharedPointersInt;
 std::unordered_map<std::string, SharedPtr<std::string>> sharedPointersString;
 
-int getIntInput() {
-    int value;
 
+template<typename T>
+T getInput() {
+    static_assert(std::is_same<T, int>::value || std::is_same<T, float>::value,
+                  "This function only supports int or float types.");
+    
+    T value;
     while (true) {
         std::cin >> value;
 
-        // Проверка на успешное считывание числа
         if (std::cin.fail()) {
-            std::cin.clear(); // Сбрасываем состояние ошибки
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Очищаем буфер ввода
-            std::cout << "Ошибка: пожалуйста, введите корректное число.\n";
+            std::cin.clear(); // Сбросить флаг ошибки
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Очистить входной буфер
+            std::cerr << "Ошибка: ожидался ввод числа (int или float) Попробуйте еще раз\n";
         } else {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Очищаем оставшийся ввод
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Убедиться, что буфер пуст
             return value;
         }
     }
 }
 
-float getFloatInput() {
-    float value;
-
-    while (true) {
-        std::cin >> value;
-
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Ошибка: пожалуйста, введите корректное число.\n";
-        } else {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return value;
-        }
-    }
-}
-
-// Создание UniquePtr
 void createUniquePtr() {
     std::string name;
     std::cout << "Введите имя для UniquePtr: ";
     std::cin >> name;
 
-    std::cout << "Выберите тип данных для UniquePtr (1 - число, 2 - строка): ";
-    int choice = getIntInput();
+    std::cout << "Выберите тип данных для UniquePtr (1 - число, 2 - строка, 3 - на основе существующего UniquePtr): ";
+    int choice = getInput<int>();
 
     if (choice == 1) {
         std::cout << "Введите значение для UniquePtr: ";
-        int value = getIntInput();
+        int value = getInput<int>();
         uniquePointersInt[name] = UniquePtr<int>(new int(value));
-        std::cout << "UniquePtr с именем " << name << " для числа создан.\n";
+        std::cout << "UniquePtr с именем " << name << " для числа создан\n";
     } else if (choice == 2) {
         std::string strValue;
         std::cout << "Введите строку для UniquePtr: ";
-        std::cin.ignore();
         std::getline(std::cin, strValue);
-
         uniquePointersString[name] = UniquePtr<std::string>(new std::string(strValue));
-        std::cout << "UniquePtr с именем " << name << " для строки создан.\n";
+        std::cout << "UniquePtr с именем " << name << " для строки создан\n";
+        std::cout << "Создан UniquePtr для строки: " << *uniquePointersString[name] << "\n";
+    } else if (choice == 3) {
+        std::cout << "Выберите тип существующего UniquePtr (1 - число, 2 - строка): ";
+        int subChoice = getInput<int>();
+
+        if (subChoice == 1) {
+            std::cout << "Введите имя существующего UniquePtr<int>: ";
+            std::string existingName;
+            std::cin >> existingName;
+
+            if (uniquePointersInt.find(existingName) != uniquePointersInt.end()) {
+                uniquePointersInt[name] = std::move(uniquePointersInt[existingName]);
+                std::cout << "UniquePtr с именем " << name << " создан на основе " << existingName << ".\n";
+            } else {
+                std::cout << "UniquePtr с таким именем не найден!\n";
+            }
+        } else if (subChoice == 2) {
+            std::cout << "Введите имя существующего UniquePtr<string>: ";
+            std::string existingName;
+            std::cin >> existingName;
+
+            if (uniquePointersString.find(existingName) != uniquePointersString.end()) {
+                uniquePointersString[name] = std::move(uniquePointersString[existingName]);
+                std::cout << "UniquePtr с именем " << name << " создан на основе " << existingName << ".\n";
+            } else {
+                std::cout << "UniquePtr с таким именем не найден!\n";
+            }
+        } else {
+            std::cout << "Неверный выбор!\n";
+        }
     } else {
         std::cout << "Неверный выбор!\n";
     }
 }
 
-// Создание SharedPtr
 void createSharedPtr() {
     std::string name;
     std::cout << "Введите имя для SharedPtr: ";
     std::cin >> name;
 
-    std::cout << "Выберите тип данных для SharedPtr (1 - число, 2 - строка): ";
-    int choice = getIntInput();
-    
+    std::cout << "Выберите тип данных для SharedPtr (1 - число, 2 - строка, 3 - на основе существующего SharedPtr): ";
+    int choice = getInput<int>();
+
     if (choice == 1) {
         std::cout << "Введите значение для SharedPtr: ";
-        int value = getIntInput();
+        int value = getInput<int>();
         sharedPointersInt[name] = SharedPtr<int>(new int(value));
-        std::cout << "SharedPtr с именем " << name << " для числа создан.\n";
+        std::cout << "SharedPtr с именем " << name << " для числа создан\n";
     } else if (choice == 2) {
         std::string strValue;
         std::cout << "Введите строку для SharedPtr: ";
-        std::cin.ignore();
         std::getline(std::cin, strValue);
         sharedPointersString[name] = SharedPtr<std::string>(new std::string(strValue));
-        std::cout << "SharedPtr с именем " << name << " для строки создан.\n";
+        std::cout << "SharedPtr с именем " << name << " для строки создан\n";
+    } else if (choice == 3) {
+        std::cout << "Выберите тип существующего SharedPtr (1 - число, 2 - строка): ";
+        int subChoice = getInput<int>();
+
+        if (subChoice == 1) {
+            std::cout << "Введите имя существующего SharedPtr<int>: ";
+            std::string existingName;
+            std::cin >> existingName;
+
+            if (sharedPointersInt.find(existingName) != sharedPointersInt.end()) {
+                sharedPointersInt[name] = sharedPointersInt[existingName];
+                std::cout << "SharedPtr с именем " << name << " создан на основе " << existingName << ".\n";
+            } else {
+                std::cout << "SharedPtr с таким именем не найден!\n";
+            }
+        } else if (subChoice == 2) {
+            std::cout << "Введите имя существующего SharedPtr<string>: ";
+            std::string existingName;
+            std::cin >> existingName;
+
+            if (sharedPointersString.find(existingName) != sharedPointersString.end()) {
+                sharedPointersString[name] = sharedPointersString[existingName];
+                std::cout << "SharedPtr с именем " << name << " создан на основе " << existingName << ".\n";
+            } else {
+                std::cout << "SharedPtr с таким именем не найден!\n";
+            }
+        } else {
+            std::cout << "Неверный выбор!\n";
+        }
     } else {
         std::cout << "Неверный выбор!\n";
     }
 }
-
-// Создание дубликата SharedPtr
-void createDuplicateSharedPtr() {
-    std::string existingName, newName;
-    std::cout << "Введите имя существующего SharedPtr для дублирования: ";
-    std::cin >> existingName;
-
-    std::cout << "Введите имя для нового дубликата SharedPtr: ";
-    std::cin >> newName;
-
-    if (sharedPointersInt.find(existingName) != sharedPointersInt.end()) {
-        sharedPointersInt[newName] = sharedPointersInt[existingName];
-        std::cout << "Дубликат SharedPtr с именем " << newName << " создан для числового SharedPtr " << existingName << ".\n";
-    } else if (sharedPointersString.find(existingName) != sharedPointersString.end()) {
-        sharedPointersString[newName] = sharedPointersString[existingName];
-        std::cout << "Дубликат SharedPtr с именем " << newName << " создан для строкового SharedPtr " << existingName << ".\n";
-    } else {
-        std::cout << "SharedPtr с именем " << existingName << " не найден!\n";
-    }
-}
-
 
 // Удаление UniquePtr
 void deleteUniquePtr() {
@@ -135,11 +152,11 @@ void deleteUniquePtr() {
 
     // Удаление числового указателя
     if (uniquePointersInt.erase(name)) {
-        std::cout << "UniquePtr для числа с именем " << name << " удален.\n";
+        std::cout << "UniquePtr для числа с именем " << name << " удален\n";
     } 
     // Удаление строкового указателя
     else if (uniquePointersString.erase(name)) {
-        std::cout << "UniquePtr для строки с именем " << name << " удален.\n";
+        std::cout << "UniquePtr для строки с именем " << name << " удален\n";
     } else {
         std::cout << "UniquePtr с именем " << name << " не найден!\n";
     }
@@ -153,11 +170,11 @@ void deleteSharedPtr() {
 
     // Удаление числового указателя
     if (sharedPointersInt.erase(name)) {
-        std::cout << "SharedPtr для числа с именем " << name << " удален.\n";
+        std::cout << "SharedPtr для числа с именем " << name << " удален\n";
     } 
     // Удаление строкового указателя
     else if (sharedPointersString.erase(name)) {
-        std::cout << "SharedPtr для строки с именем " << name << " удален.\n";
+        std::cout << "SharedPtr для строки с именем " << name << " удален\n";
     } else {
         std::cout << "SharedPtr с именем " << name << " не найден!\n";
     }
@@ -186,7 +203,7 @@ void displayPointers() {
     std::cout << "\nСписок SharedPtr для чисел:\n";
     for (const auto& [name, ptr] : sharedPointersInt) {
         if (ptr) {
-            std::cout << "Имя: " << name << ", Значение: " << *ptr << ", Счетчик ссылок: " << ptr.use_count() << "\n";
+            std::cout << "Имя: " << name << ", Значение: " << *ptr << ", Счетчик ссылок: " << ptr.useCount() << "\n";
         } else {
             std::cout << "Имя: " << name << ", Указатель освобожден\n";
         }
@@ -195,7 +212,7 @@ void displayPointers() {
     std::cout << "\nСписок SharedPtr для строк:\n";
     for (const auto& [name, ptr] : sharedPointersString) {
         if (ptr) {
-            std::cout << "Имя: " << name << ", Значение: " << *ptr << ", Счетчик ссылок: " << ptr.use_count() << "\n";
+            std::cout << "Имя: " << name << ", Значение: " << *ptr << ", Счетчик ссылок: " << ptr.useCount() << "\n";
         } else {
             std::cout << "Имя: " << name << ", Указатель освобожден\n";
         }
@@ -207,29 +224,29 @@ void testSubtypingConsole() {
     std::cout << "1. Создать SharedPtr<int> и присвоить его SharedPtr<float>\n";
     std::cout << "2. Создать SharedPtr<float> и присвоить его SharedPtr<int>\n";
     std::cout << "Выберите опцию (1 или 2): ";
-    int choice = getIntInput();
+    int choice = getInput<int>();
 
     if (choice == 1) {
         std::cout << "Введите значение для SharedPtr<int>: ";
-        int value = getIntInput();
+        int value = getInput<int>();
 
         SharedPtr<int> intPtr(new int(value));
         SharedPtr<float> floatPtr = intPtr;  
         
         std::cout << "SharedPtr<int> успешно присвоен SharedPtr<float>.\n";
         std::cout << "Значение floatPtr: " << *floatPtr << "\n";
-        std::cout << "Счетчик ссылок floatPtr: " << floatPtr.use_count() << "\n";
+        std::cout << "Счетчик ссылок floatPtr: " << floatPtr.useCount() << "\n";
     } 
     else if (choice == 2) {
         std::cout << "Введите значение для SharedPtr<float>: ";
-        float value = getFloatInput();
+        float value = getInput<float>();
 
         SharedPtr<float> floatPtr(new float(value));
         SharedPtr<int> intPtr = floatPtr;  
         
         std::cout << "SharedPtr<float> успешно присвоен SharedPtr<int>.\n";
         std::cout << "Значение intPtr: " << *intPtr << "\n";
-        std::cout << "Счетчик ссылок intPtr: " << intPtr.use_count() << "\n";
+        std::cout << "Счетчик ссылок intPtr: " << intPtr.useCount() << "\n";
     } 
     else {
         std::cout << "Неверный выбор! Попробуйте снова.\n";
@@ -242,15 +259,14 @@ void displayMenu() {
         std::cout << "\nМеню:\n";
         std::cout << "1. Создать UniquePtr\n";
         std::cout << "2. Создать SharedPtr\n";
-        std::cout << "3. Создать дубликат SharedPtr\n";
-        std::cout << "4. Удалить UniquePtr\n";
-        std::cout << "5. Удалить SharedPtr\n";
-        std::cout << "6. Показать все указатели\n";
-        std::cout << "7. Тесты\n";
-        std::cout << "8. Тест подтипизации\n";
+        std::cout << "3. Удалить UniquePtr\n";
+        std::cout << "4. Удалить SharedPtr\n";
+        std::cout << "5. Показать все указатели\n";
+        std::cout << "6. Тесты\n";
+        std::cout << "7. Тест подтипизации\n";
         std::cout << "0. Выход\n";
         std::cout << "Ваш выбор: ";
-        choice = getIntInput();
+        choice = getInput<int>();
 
         switch (choice) {
             case 1:
@@ -260,32 +276,29 @@ void displayMenu() {
                 createSharedPtr();
                 break;
             case 3:
-                createDuplicateSharedPtr();
-                break;
-            case 4:
                 deleteUniquePtr();
                 break;
-            case 5:
+            case 4:
                 deleteSharedPtr();
                 break;
-            case 6:
+            case 5:
                 displayPointers();
                 break;
-            case 7:
+            case 6:
                 int value_for_test;
                 std::cout << "Выберите Тесты\n";
                 std::cout << "1. Функциональное тестирование\n";
                 std::cout << "2. Нагрузочное тестирование\n";
                 std::cout << "0. Выход\n";
                 std::cout << "Ваш выбор:\n";
-                value_for_test = getIntInput();
+                value_for_test = getInput<int>();
                 
                 switch(value_for_test) {
                     case 1: 
                         functionalTest();
                         break;
                     case 2:
-                        runLoadTests();
+                        runLoadTestsAndPlot();
                         break;
                     case 0:
                         break;
@@ -293,11 +306,11 @@ void displayMenu() {
                         std::cout << "Неверный выбор. Попробуйте снова\n";
                 }
                 break;
-            case 8:
+            case 7:
                 testSubtypingConsole();
                 break;
             case 0:
-                std::cout << "Выход из программы.\n";
+                std::cout << "Выход из программы\n";
                 break;
             default:
                 std::cout << "Неверный выбор. Попробуйте снова.\n";

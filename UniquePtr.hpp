@@ -32,21 +32,30 @@ public:
         return *this;
     }
 
-    template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
-    UniquePtr(UniquePtr<U>&& other) noexcept : pointer(static_cast<T*>(other.release())) {
-    }
+    // Конструктор перемещения для наследуемых типов
+    template <typename U, typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
+    UniquePtr(UniquePtr<U>&& other) noexcept : pointer(static_cast<T*>(other.release())) {}
 
-    template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+    // Оператор присваивания для наследуемых типов
+    template <typename U, typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
     UniquePtr& operator=(UniquePtr<U>&& other) noexcept {
-        if (this != reinterpret_cast<UniquePtr<T>*>(&other)) {
+        if (reinterpret_cast<void*>(this) != reinterpret_cast<void*>(&other)) {
             delete pointer;
             pointer = static_cast<T*>(other.release());
         }
         return *this;
     }
 
+    T& operator*() {
+        return *pointer;
+    }
+
     const T& operator*() const {
         return *pointer;
+    }
+
+    T* operator->() {
+        return pointer;
     }
 
     const T* operator->() const {
